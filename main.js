@@ -1,5 +1,8 @@
 const $=document.querySelector.bind(document)
 const $$=document.querySelectorAll.bind(document)
+
+const LOCAL_STORAGE_KEY="State-Music"
+
 var playList=$('.playlist')
 var cd=$('.cd');
 var cdThumb=$('.cd-thumb');
@@ -18,6 +21,17 @@ const app={
     isPlaying:false,
     isRandom:false,
     isReplay:false,
+    config:JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY))||{},
+    // Set cấu hình
+    setConfig:function(key,value){
+        this.config[key]=value;
+        localStorage.setItem(LOCAL_STORAGE_KEY,JSON.stringify(this.config));
+    },
+    //load cấu hình
+    loadConfig:function(){
+        this.isRandom=this.config.isRandom
+        this.isReplay=this.config.isReplay
+    },
     songs:[
     {
         name:'Ghé Qua' ,
@@ -178,6 +192,7 @@ const app={
         progress.oninput=function(e){
             seekTime=audio.duration/100 *e.target.value
             audio.currentTime=seekTime
+            audio.play()
         }
         // xử lí next song mới
         nextBtn.onclick=function(){
@@ -199,11 +214,13 @@ const app={
         //Xử lí khi ấn vào nút random 
         randomBtn.onclick=function(){
             _this.isRandom=!_this.isRandom
+            _this.setConfig("isRandom",_this.isRandom)
             randomBtn.classList.toggle("active",_this.isRandom)
         }
          //Xử lí khi ấn vào nút repeat 
          repeatBtn.onclick=function(){
             _this.isReplay=!_this.isReplay
+            _this.setConfig("isReplay",_this.isReplay)
             repeatBtn.classList.toggle("active",_this.isReplay)
         }
         //Xử li khi hết bài hát
@@ -237,13 +254,15 @@ const app={
         }))
         this.currentIndex=newIndex;
         arrayOfSongsPlayed.push(this.currentIndex)
-        console.log(arrayOfSongsPlayed)
+        // console.log(arrayOfSongsPlayed)
         if(arrayOfSongsPlayed.length>=this.songs.length){
             arrayOfSongsPlayed=[]
         }
         this.loadCurrentSong();
     },
     start:function(){
+        // load config
+        this.loadConfig();
         //Render danh sách bài hát
         this.renderListSong();
         // Xử lí sự kiện 
@@ -252,6 +271,9 @@ const app={
         this.defineProperties();
         // load bài hát hiện tại
         this.loadCurrentSong();
+        // set trạng thái của repeat với random theo localStorage
+        randomBtn.classList.toggle("active",this.isRandom)
+        repeatBtn.classList.toggle("active",this.isReplay)
     }
 }
 
